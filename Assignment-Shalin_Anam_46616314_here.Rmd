@@ -1,0 +1,203 @@
+---
+title: "Assignment"
+output: pdf_document
+author: "Shalin Anam"
+date: "2024-05-08"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Question 1
+## Part a
+```{r}
+sales <- read.csv("sales.csv", header =TRUE)
+plot(sales, main = "Sales vs Index")
+```
+Observing the original data in the scatter plot, it is clear that this is NOT a linear relationship. Instead, it contains a curve pattern suggesting a polynomial model might be more appropriate. 
+
+A curve in the scatter plot indicates that as Index increases, the increase or decrease in Sales does not happen at a constant rate. To prove that teh linear model is NOT the most effective, we can conduct a simple linear regression model as shown below:
+
+## Part b
+```{r}
+M1 = lm(Sales ~ Index, data = sales)
+summary(M1)
+plot(sales, main = "Sales vs Index")
+abline(M1, col = "red")
+```
+The overlaid red line from the linear regression model is a clear indicator that this model does NOT accurately capture the underlying relationship between these variables. We can verify this with diagnostic tests:
+
+```{r}
+par(mfrow = c(1, 2))
+plot(M1, which = 1:2)
+```
+The diagnostic plots reveals a concern about the effectiveness of the simple linear regression model. Firstly, the quantile plot (QQ plot) of the residuals shows a slight curve, which implies that the residuals do not perfectly follow the normal distribution assumption. However, more significantly, the Residual vs Fitted plot shows a clear concave up quadratic trend, suggesting a quadratic or a higher order fit. Hence, these patterns in the residual versus fitted plot indicate that the assumption of equal variance is violated.
+
+This is strong evidence to support the need for a more complex model such a polynomial regression which can better represent the curve structure in our data. A standard linear regression does not meet the assumptions and a visual representation of the original plot suggests a curve structure.
+
+## Part c
+```{r}
+M2 = lm(Sales ~ Index + I(Index^2), data = sales)
+M3 = lm(Sales ~ Index + I(Index^2) + I(Index^3), data = sales)
+summary(M2)
+summary(M3)
+```
+M2 represents a quadratic model (second - level polynomial). M3 represents a cubic model (third - level polynomial). Considering the summary of each one, we can see that cubic term is insignificant. We can also observe the Goodness of Fit. The M2 Model has a slightly higher Adjusted R Squared compared to M3 which shows that it better explains the variance. Hence, M2 appears to be a better choice. 
+
+## Part d
+### Predicting M1
+```{r}
+plot(sales)
+x = seq(from = min(sales$Index), to = max(sales$Index), length = 32)
+Indexdat = data.frame(Index = x)
+Saleshat = predict(M1, newdata = Indexdat)
+lines(x, Saleshat, col = "red")
+```
+This the simple linear model (M1). Observing this graph above, we can see that this model does NOT accurately represent the curved relationship between sales and index. 
+
+
+### Predicting M2
+```{r}
+plot(sales)
+x = seq(from = min(sales$Index), to = max(sales$Index), length = 32)
+Indexdat = data.frame(Index = x)
+Saleshat = predict(M2, newdata = Indexdat)
+lines(x, Saleshat, col = "Blue")
+```
+M2 shows a quadratic polynomial. Observing this graph above, we can see that the line explains a greater portion of the variance and hence captures the curve structure of the data. 
+
+### Predicting M3
+```{r}
+plot(sales)
+x = seq(from = min(sales$Index), to = max(sales$Index), length = 32)
+Indexdat = data.frame(Index = x)
+Saleshat = predict(M3, newdata = Indexdat)
+lines(x, Saleshat, col = "Green")
+```
+M3 represents the cubic. Observing this graph above, we can see that it is similar to the quadratic model, the cubic model also captures the curve. Hence, we need to choose which model out of the quadratic and cubic is the best. 
+
+## Part e
+```{r}
+anova(M3)
+```
+From the sequential sum of squares above we can see that the cubic term is insignificant. However, the quadratic term is significant. The cubic term contributes almost nothing to the explanation of variance of Sales with a sum square value of just 0.2. This shows it is insignificant. Furthermore, the p-value of the cubic term is 0.847 hence remove it and refit the model with the quadratic. 
+
+## Part f
+Comparing the p-values, we can see that the cubic has an insignificant p-value, hence remove it. Therefore, we get the quadratic which has a significant p - value. The quadratic has a significant sum square as well. 
+```{r}
+plot(M2, which = 1:2)
+```
+
+Above we have plotted the Residual vs Fitted plot and the QQ plot. We can clearly see that there is equal variance and the residuals follow a normal distribution. Hence, M2 model satisfies the assumptions. Visually, M2 is the best as well since the blue line follows the trend of data points accurately. 
+
+# Question 2
+## Part a
+```{r}
+campaign <- read.csv("campaign.csv", header = TRUE)
+head(campaign)
+table(campaign [,2], campaign [,3])
+```
+This study is balanced since there are an equal number of replicates across all the factors. 
+
+```{r}
+boxplot(Score ~ Region + Type, data = campaign)
+```
+
+The boxplots show equal variance since the lengths are similar. Hence, the assumption of equal variance is satisfied. 
+
+```{r}
+with(campaign, interaction.plot(Region, Type, Score, col = 1:2))
+```
+
+- This first interaction plot suggests that accross all types of marketing campaigns, the engagement scores are higher in urban regions compared to rural. 
+
+- This indicates that region has a significant impact on engagement scores. This is shown by urban regions consistently outperforming rural regions. 
+
+- As shown in the interaction plot, the lines for social media, email, and billboard are relatively parallel. This indicated that an increase in engagement scores from rural to urban is consistent across all catagories and different types of campaigns 
+
+- The parallel lines suggest that there is significant interaction effect between region and type. 
+
+```{r}
+with(campaign, interaction.plot(Type, Region, Score, col = 1:2))
+```
+
+- From this interaction plot, we can see that billboards have the least effect on engagement scores across both rural and urban. Its clear that social media has the highest engagement score in both regions. 
+
+- The interaction plot shows that scoial mendia is the most effective in increasing customer engagement. 
+
+- While some interaction is present in the plot, it clearly demonstrates that the Type of the campaign and Region independantly effect the customer engagement score. 
+ 
+## Part b
+The full Two-Way ANOVA interaction model is:
+
+$$ Y_{ijk} = \mu + \alpha_i + \beta_j + \gamma_{ij} + \epsilon_{ijk}, $$
+
+where the parameters are:
+
+- $Y_{ijk}$: Increase in engagement score;
+
+- $\alpha_i$: the Type main effect, there are three levels - Billboard, Email, Social Media;
+
+- $\beta_j$: the Region main effect, there are two levels - Rural and Urban;
+
+- $\gamma_{ij}$: interaction effect between Type and Region;
+
+- $\epsilon_{ijk} \sim N(0, \sigma^2)$: is the unexplained variation.
+
+# Part c
+We test the null hypothesis: 
+
+$H_0: \gamma_{ij} = 0$ for all $i, j$ against the alternative hypothesis $H_1: \text{at least one } \gamma_{ij} \neq 0$.
+
+```{r}
+model = lm(Score ~ Region * Type, data = campaign)
+anova(model)
+par(mfrow = c(1, 2))
+plot(model, which = 1:2)
+```
+
+- The equal variance assumption is met adequately as shown in the residual vs fitted plot where the residuals show an equal distribution around the fitted value. 
+
+- The quantile plot (QQ plots) follow a linear line, hence indicating that residuals follow a formal distribution. 
+
+- From the anova model, the F-test of the interaction term contains a P-vale of 0.7657. This indicates that the interaction term is insignificant and hence needs to be removed from the model. 
+
+
+## Part d
+Currently in our study, we have a balanced study with an insignificant interaction term. Therefore we must refit the model:
+
+
+Hypotheses:
+
+- For the **Type** of campaign: ($H_0$): $\alpha_i = 0$ for all $i$ against ($H_1$): At least one $\alpha_i \neq 0$
+
+- For the **Region**: ($H_0$): $\beta_j = 0$ for all $j$ against ($H_1$): At least one $\beta_j \neq 0$
+
+Using the regression method, we have:
+
+```{r}
+model_main = lm(Score ~ Type + Region, data = campaign)
+summary(model_main)
+par(mfrow = c(1, 2))
+plot(model_main, which = 1:2)
+```
+The effect of changing one factor is considered while maintaining all other factors or predictors at their baseline. Each predictor factor is conditional to all other factors used in the model. In our study, the baseline comparison is type billboard and region rural. The anova will check the significance of the Type and Region:
+```{r}
+anova(model_main)
+```
+
+- The residule vs fitted plot shown validates the equal vairance assumption since there is no pattern on that plot. 
+- The residuals follows a normal distribution as shoown in the QQ plot which has a linear structure. 
+- From the Anova table, both Type and Region are significant at 5% significance level since both p values are less then 0.05. Hence, cannot be removed. 
+- Therefore we have accomplished our final model. 
+
+## Part e
+```{r}
+table(campaign[, c("Type", "Region")])
+```
+
+Hence the study is balanced since since there is an equal number of obervations. Therefore, we can conduct the TukeyHSD Test.
+
+```{r}
+TukeyHSD(aov(model_main))
+```
+The balanced design of this study allows for us to compare using Tukey's HSD test more effectively. The results clearly show that social media campaigns have the highest impact on the customer engagement scores. This is followed by email campaigns and lastly billboard with the least effectiveness. Furthermore, the campigns that are conducted in the urban regions significantly outperform those in rural regions. 
